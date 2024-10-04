@@ -2,11 +2,26 @@ namespace QuizManagementSystem.Models
 {
     public class ShortAnswerQuestion : Question
     {
-        public string CorrectAnswer { get; set; }
+        public List<string> Keywords { get; set; }
 
-        public override bool CheckAnswer(string answer)
+        public ShortAnswerQuestion()
         {
-            return string.Equals(CorrectAnswer, answer, System.StringComparison.OrdinalIgnoreCase);
+            Keywords = new List<string>();
+        }
+
+        public override bool CheckAnswer(string userAnswer)
+        {
+            var lowerCaseAnswer = userAnswer.ToLower();
+            
+            foreach (var keyword in Keywords)
+            {
+                if (!lowerCaseAnswer.Contains(keyword.ToLower()))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }

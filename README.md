@@ -45,4 +45,6 @@ A Quiz Management System built using .NET 8, designed for creating, managing, an
    cd QuizManagementSystem
    dotnet restore
    dotnet run
+## UML DIAGRAM
 
+![umldiagram drawio](https://github.com/user-attachments/assets/c0f981f8-c376-4317-bbf4-6133fecb0d0d)

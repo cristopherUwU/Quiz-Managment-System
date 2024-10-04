@@ -1,7 +1,5 @@
 using QuizManagementSystem.Models;
 using QuizManagementSystem.Services;
-using System;
-using System.Collections.Generic;
 
 namespace QuizManagementSystem.Controllers
 {
@@ -15,40 +13,8 @@ namespace QuizManagementSystem.Controllers
             _quizService = quizService;
             _userService = userService;
         }
-
-        public void AdminMenu()
-        {
-            while (true)
-            {
-                Console.WriteLine("Admin Menu:");
-                Console.WriteLine("1. Create Quiz");
-                Console.WriteLine("2. View All Quizzes");
-                Console.WriteLine("3. Assign Quiz to User");
-                Console.WriteLine("4. Exit");
-
-                string choice = Console.ReadLine();
-
-                switch (choice)
-                {
-                    case "1":
-                        CreateQuiz();
-                        break;
-                    case "2":
-                        ViewAllQuizzes();
-                        break;
-                    case "3":
-                        AssignQuizToUser();
-                        break;
-                    case "4":
-                        return; // Exit the admin menu
-                    default:
-                        Console.WriteLine("Invalid choice. Please select a valid option.");
-                        break;
-                }
-            }
-        }
-
-        private void CreateQuiz()
+        
+        public void CreateQuiz()
         {
             Console.WriteLine("Enter quiz title:");
             string title = Console.ReadLine();
@@ -63,9 +29,8 @@ namespace QuizManagementSystem.Controllers
                 Console.WriteLine("Select question type (1. Multiple Choice, 2. True/False, 3. Short Answer, 4. Exit):");
                 string typeChoice = Console.ReadLine();
 
-                if (typeChoice == "4") break; // Exit the question creation loop
-
-                Question question = null;
+                if (typeChoice == "4") break;
+                Question question;
                 switch (typeChoice)
                 {
                     case "1":
@@ -79,7 +44,7 @@ namespace QuizManagementSystem.Controllers
                         break;
                     default:
                         Console.WriteLine("Invalid choice. Try again.");
-                        continue; // Skip to next iteration
+                        continue;
                 }
 
                 if (question != null)
@@ -92,6 +57,64 @@ namespace QuizManagementSystem.Controllers
             var quiz = new Quiz(title, description, questions);
             _quizService.AddQuiz(quiz);
             Console.WriteLine("Quiz created successfully!");
+        }
+
+        public void ViewAllQuizzes()
+        {
+            var quizzes = _quizService.GetAllQuizzes();
+            Console.WriteLine("All Quizzes:");
+
+            if (quizzes.Count == 0)
+            {
+                Console.WriteLine("No quizzes available.");
+                return;
+            }
+
+            foreach (var quiz in quizzes)
+            {
+                Console.WriteLine($"Title: {quiz.Title}, Description: {quiz.Description}, Questions: {quiz.Questions.Count}");
+            }
+        }
+
+        public void AssignQuizToUser()
+        {
+            Console.WriteLine("Enter the nickname of the user to assign a quiz to:");
+            string userNickname = Console.ReadLine();
+
+            User user = _userService.GetUserByNickname(userNickname);
+            if (user == null || user.IsAdmin)
+            {
+                Console.WriteLine("User not found or is an admin.");
+                return;
+            }
+
+            Console.WriteLine("Enter the title of the quiz to assign:");
+            string quizTitle = Console.ReadLine();
+
+            var quiz = _quizService.GetQuizByTitle(quizTitle);
+            if (quiz == null)
+            {
+                Console.WriteLine("Quiz not found.");
+                return;
+            }
+
+            user.AssignedQuizzes.Add(quiz);
+            Console.WriteLine($"Quiz '{quiz.Title}' assigned to user '{user.Nickname}'.");
+        }
+
+        public void ViewAssignedQuizzes(User loggedInUser)
+        {
+            Console.WriteLine("Assigned Quizzes:");
+            if (loggedInUser.AssignedQuizzes.Count == 0)
+            {
+                Console.WriteLine("No quizzes assigned.");
+                return;
+            }
+
+            foreach (var quiz in loggedInUser.AssignedQuizzes)
+            {
+                Console.WriteLine($"- {quiz.Title}: {quiz.Description}");
+            }
         }
 
         private MultipleChoiceQuestion CreateMultipleChoiceQuestion()
@@ -115,7 +138,7 @@ namespace QuizManagementSystem.Controllers
             }
 
             Console.WriteLine("Enter the index of the correct option (1-based):");
-            mcQuestion.CorrectOption = int.Parse(Console.ReadLine()) - 1; // Store as 0-based index
+            mcQuestion.CorrectOption = int.Parse(Console.ReadLine()) - 1;
 
             return mcQuestion;
         }
@@ -148,49 +171,6 @@ namespace QuizManagementSystem.Controllers
                 Description = questionText,
                 CorrectAnswer = correctAnswer
             };
-        }
-
-        private void ViewAllQuizzes()
-        {
-            var quizzes = _quizService.GetAllQuizzes();
-            Console.WriteLine("All Quizzes:");
-
-            if (quizzes.Count == 0)
-            {
-                Console.WriteLine("No quizzes available.");
-                return;
-            }
-
-            foreach (var quiz in quizzes)
-            {
-                Console.WriteLine($"Title: {quiz.Title}, Description: {quiz.Description}, Questions: {quiz.Questions.Count}");
-            }
-        }
-
-        private void AssignQuizToUser()
-        {
-            Console.WriteLine("Enter the nickname of the user to assign a quiz to:");
-            string userNickname = Console.ReadLine();
-
-            User user = _userService.GetUserByNickname(userNickname);
-            if (user == null || user.IsAdmin)
-            {
-                Console.WriteLine("User not found or is an admin.");
-                return;
-            }
-
-            Console.WriteLine("Enter the title of the quiz to assign:");
-            string quizTitle = Console.ReadLine();
-
-            var quiz = _quizService.GetQuizByTitle(quizTitle);
-            if (quiz == null)
-            {
-                Console.WriteLine("Quiz not found.");
-                return;
-            }
-
-            user.AssignedQuizzes.Add(quiz);
-            Console.WriteLine($"Quiz '{quiz.Title}' assigned to user '{user.Nickname}'.");
         }
     }
 }

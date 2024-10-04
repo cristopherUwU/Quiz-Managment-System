@@ -32,7 +32,6 @@ namespace QuizManagementSystem.Controllers
 
             while (true)
             {
-                // Present options for adding a new question or using one from the pool
                 Console.WriteLine("Select an option:");
                 Console.WriteLine("1. Add new question");
                 Console.WriteLine("2. Use a question from the pool");
@@ -40,17 +39,17 @@ namespace QuizManagementSystem.Controllers
         
                 string option = Console.ReadLine();
 
-                if (option == "3") break; // Exit the loop when quiz creation is finished
+                if (option == "3") break;
 
                 Question question = null;
 
                 switch (option)
                 {
                     case "1":
-                        question = AddNewQuestion(); // Add a new question
+                        question = AddNewQuestion();
                         break;
                     case "2":
-                        question = SelectQuestionFromPool(); // Use a question from the pool
+                        question = SelectQuestionFromPool();
                         break;
                     default:
                         Console.WriteLine("Invalid option. Please select a valid choice.");

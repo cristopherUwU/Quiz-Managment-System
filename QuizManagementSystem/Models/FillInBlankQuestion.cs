@@ -1,26 +1,33 @@
-using System.Collections.Generic;
-
 namespace QuizManagementSystem.Models
 {
     public class FillInBlankQuestion : Question
     {
-        public List<string> Keywords { get; set; }
-
-        public FillInBlankQuestion()
-        {
-            Keywords = new List<string>();
-        }
+        public string CorrectAnswer { get; set; }
 
         public override bool CheckAnswer(string userAnswer)
         {
-            foreach (var keyword in Keywords)
+            var similarity = CalculateSimilarity(userAnswer.ToLower(), CorrectAnswer.ToLower());
+            return similarity >= 0.90;
+        }
+
+        private double CalculateSimilarity(string userAnswer, string correctAnswer)
+        {
+            var userWords = userAnswer.Split(new char[] { ' ', '.', ',', '!', '?' }, StringSplitOptions.RemoveEmptyEntries);
+            var correctWords = correctAnswer.Split(new char[] { ' ', '.', ',', '!', '?' }, StringSplitOptions.RemoveEmptyEntries);
+
+            var matchCount = 0;
+
+            foreach (var word in userWords)
             {
-                if (!userAnswer.ToLower().Contains(keyword.ToLower()))
+                if (correctWords.Contains(word))
                 {
-                    return false;
+                    matchCount++;
                 }
             }
-            return true;
+            
+            // To avoid division by zero, ensure correctWords has at least one element
+            var similarity = correctWords.Length > 0 ? (double)matchCount / correctWords.Length : 0.0;
+            return similarity;
         }
     }
 }

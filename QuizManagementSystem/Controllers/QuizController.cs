@@ -22,28 +22,38 @@ namespace QuizManagementSystem.Controllers
             Console.WriteLine("Enter quiz description:");
             string description = Console.ReadLine();
 
+            Console.WriteLine("Should the quiz allow retakes? (yes/no):");
+            bool allowRetake = Console.ReadLine().Equals("yes", StringComparison.OrdinalIgnoreCase);
+
+            Console.WriteLine("Should the quiz randomize questions? (yes/no):");
+            bool randomizeQuestions = Console.ReadLine().Equals("yes", StringComparison.OrdinalIgnoreCase);
+            
             List<Question> questions = new List<Question>();
 
             while (true)
             {
-                Console.WriteLine("Select question type (1. Multiple Choice, 2. True/False, 3. Short Answer, 4. Exit):");
-                string typeChoice = Console.ReadLine();
+                // Present options for adding a new question or using one from the pool
+                Console.WriteLine("Select an option:");
+                Console.WriteLine("1. Add new question");
+                Console.WriteLine("2. Use a question from the pool");
+                Console.WriteLine("3. Finish quiz creation");
+        
+                string option = Console.ReadLine();
 
-                if (typeChoice == "4") break;
-                Question question;
-                switch (typeChoice)
+                if (option == "3") break; // Exit the loop when quiz creation is finished
+
+                Question question = null;
+
+                switch (option)
                 {
                     case "1":
-                        question = CreateMultipleChoiceQuestion();
+                        question = AddNewQuestion(); // Add a new question
                         break;
                     case "2":
-                        question = CreateTrueFalseQuestion();
-                        break;
-                    case "3":
-                        question = CreateShortAnswerQuestion();
+                        question = SelectQuestionFromPool(); // Use a question from the pool
                         break;
                     default:
-                        Console.WriteLine("Invalid choice. Try again.");
+                        Console.WriteLine("Invalid option. Please select a valid choice.");
                         continue;
                 }
 
@@ -54,10 +64,89 @@ namespace QuizManagementSystem.Controllers
                 }
             }
 
-            var quiz = new Quiz(title, description, questions);
+            var quiz = new Quiz(title, description, questions, allowRetake, randomizeQuestions);
             _quizService.AddQuiz(quiz);
             Console.WriteLine("Quiz created successfully!");
         }
+
+        private Question AddNewQuestion()
+        {
+            Console.WriteLine("Select question type:");
+            Console.WriteLine("1. Multiple Choice");
+            Console.WriteLine("2. True/False");
+            Console.WriteLine("3. Short Answer");
+            Console.WriteLine("4. Fill in the Blank");
+
+            string typeChoice = Console.ReadLine();
+            Question question = null;
+
+            switch (typeChoice)
+            {
+                case "1":
+                    question = CreateMultipleChoiceQuestion();
+                    break;
+                case "2":
+                    question = CreateTrueFalseQuestion();
+                    break;
+                case "3":
+                    question = CreateShortAnswerQuestion();
+                    break;
+                case "4":
+                    question = CreateFillInTheBlankQuestion();
+                    break;
+                default:
+                    Console.WriteLine("Invalid choice. Try again.");
+                    break;
+            }
+
+            return question;
+        }
+        
+        private FillInBlankQuestion CreateFillInTheBlankQuestion()
+        {
+            Console.WriteLine("Enter the question (with a blank where the user will fill in):");
+            string questionText = Console.ReadLine();
+
+            Console.WriteLine("Enter keywords that should be present in the correct answer (comma separated):");
+            string keywordInput = Console.ReadLine();
+            var keywords = keywordInput.Split(',').Select(k => k.Trim()).ToList();
+
+            return new FillInBlankQuestion
+            {
+                Description = questionText,
+                Keywords = keywords
+            };
+        }
+
+        
+        private Question SelectQuestionFromPool()
+        {
+            var poolQuestions = _quizService.GetQuestionPool();
+
+            if (poolQuestions.Count == 0)
+            {
+                Console.WriteLine("The question pool is empty.");
+                return null;
+            }
+
+            Console.WriteLine("Select a question from the pool:");
+
+            for (int i = 0; i < poolQuestions.Count; i++)
+            {
+                Console.WriteLine($"{i + 1}. {poolQuestions[i].Description}");
+            }
+
+            Console.Write("Enter the number of the question you want to use: ");
+            if (int.TryParse(Console.ReadLine(), out int selectedIndex) && selectedIndex > 0 && selectedIndex <= poolQuestions.Count)
+            {
+                return poolQuestions[selectedIndex - 1];
+            }
+
+            Console.WriteLine("Invalid selection.");
+            return null;
+        }
+
+
 
         public void ViewAllQuizzes()
         {
@@ -171,6 +260,60 @@ namespace QuizManagementSystem.Controllers
                 Description = questionText,
                 CorrectAnswer = correctAnswer
             };
+        }
+        
+        public void TakeAssignedQuiz(User user)
+        {
+            if (user.AssignedQuizzes.Count == 0)
+            {
+                Console.WriteLine("You have no assigned quizzes.");
+                return;
+            }
+
+            Console.WriteLine("Select a quiz to take:");
+            for (int i = 0; i < user.AssignedQuizzes.Count; i++)
+            {
+                Console.WriteLine($"{i + 1}. {user.AssignedQuizzes[i].Title}");
+            }
+
+            int quizChoice;
+            if (!int.TryParse(Console.ReadLine(), out quizChoice) || quizChoice < 1 || quizChoice > user.AssignedQuizzes.Count)
+            {
+                Console.WriteLine("Invalid selection. Please try again.");
+                return;
+            }
+
+            var selectedQuiz = user.AssignedQuizzes[quizChoice - 1];
+            TakeQuiz(selectedQuiz);
+        }
+
+        private void TakeQuiz(Quiz quiz)
+        {
+            Console.WriteLine($"Taking quiz: {quiz.Title}");
+    
+            if (quiz.RandomizeQuestions)
+            {
+                quiz.Questions = quiz.Questions.OrderBy(q => Guid.NewGuid()).ToList(); // Shuffle questions
+            }
+
+            var attempt = new QuizAttempt();
+
+            foreach (var question in quiz.Questions)
+            {
+                Console.WriteLine(question.Description);
+                string userAnswer = Console.ReadLine();
+
+                if (question.CheckAnswer(userAnswer))
+                {
+                    attempt.CorrectAnswers++;
+                }
+                attempt.TotalQuestions++;
+            }
+
+            attempt.Score = (int)((double)attempt.CorrectAnswers / attempt.TotalQuestions * 100);
+            quiz.Attempts.Add(attempt);
+
+            Console.WriteLine($"Quiz finished! Score: {attempt.Score}, Correct Answers: {attempt.CorrectAnswers}/{attempt.TotalQuestions}, Accuracy: {(attempt.Score / 100.0) * 100}%");
         }
     }
 }

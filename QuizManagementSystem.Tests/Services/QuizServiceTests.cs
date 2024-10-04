@@ -15,26 +15,22 @@ public class QuizServiceTests
     [Fact]
     public void AddQuiz_ShouldAddQuizToList()
     {
-        // Arrange
         var quiz = new Quiz(
             "Sample Quiz",
             "This is a sample quiz.",
-            new List<Question>(), // Empty list for now
+            new List<Question>(),
             false,
             true
         );
 
-        // Act
         _quizService.AddQuiz(quiz);
 
-        // Assert
         Assert.Contains(quiz, _quizService.GetAllQuizzes());
     }
 
     [Fact]
     public void GetQuizByTitle_ShouldReturnCorrectQuiz()
     {
-        // Arrange
         var quiz = new Quiz(
             "Unique Quiz Title",
             "This is a unique quiz.",
@@ -45,20 +41,16 @@ public class QuizServiceTests
 
         _quizService.AddQuiz(quiz);
 
-        // Act
         var result = _quizService.GetQuizByTitle("Unique Quiz Title");
 
-        // Assert
         Assert.Equal(quiz, result);
     }
 
     [Fact]
     public void GetQuizByTitle_ShouldReturnNull_WhenQuizDoesNotExist()
     {
-        // Act
         var result = _quizService.GetQuizByTitle("Non-Existent Quiz");
 
-        // Assert
         Assert.Null(result);
     }
 }

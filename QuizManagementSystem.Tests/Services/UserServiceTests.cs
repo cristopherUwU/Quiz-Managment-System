@@ -13,108 +13,97 @@ public class UserServiceTests
     [Fact]
     public void AssignQuizToUser_ShouldAddQuizToUserAssignedQuizzes()
     {
-        // Arrange
         var user = new User(
-            "cristo",                              // username
-            "cristopher@example.com",              // email
-            "123",                                 // password
-            false                                  // allowQuizRetake
+            "cristo",
+            "cristopher@example.com",
+            "123", 
+            false
         );
 
         var quiz = new Quiz(
-            "Sample Quiz",                          // title
-            "This is a sample quiz.",              // description
-            new List<Question>(),                   // questions (empty list to start)
-            false,                                  // isRetakeAllowed
-            true                                    // randomizeQuestions
+            "Sample Quiz",
+            "This is a sample quiz.",
+            new List<Question>(),
+            false,
+            true                              
         );
 
-        // Act
         user.AssignedQuizzes.Add(quiz);
 
-        // Assert
         Assert.Contains(quiz, user.AssignedQuizzes);
     }
 
     [Fact]
     public void User_ShouldBeAbleToRetakeQuiz_WhenRetakeAllowedIsTrue()
     {
-        // Arrange
         var user = new User(
             "cristo",
             "cristopher@example.com",
             "123",
-            true // allowQuizRetake set to true
+            true
         );
 
         var quiz = new Quiz(
             "Sample Quiz",
             "This is a sample quiz.",
             new List<Question>(),
-            true, // isRetakeAllowed set to true
+            true,
             true
         );
 
         user.AssignedQuizzes.Add(quiz);
 
-        // Assert
         Assert.True(quiz.AllowRetake);
     }
 
     [Fact]
     public void User_ShouldNotBeAbleToRetakeQuiz_WhenRetakeAllowedIsFalse()
     {
-        // Arrange
         var user = new User(
             "cristo",
             "cristopher@example.com",
             "123",
-            false // allowQuizRetake set to false
+            false
         );
 
         var quiz = new Quiz(
             "Sample Quiz",
             "This is a sample quiz.",
             new List<Question>(),
-            false, // isRetakeAllowed set to false
+            false,
             true
         );
 
         user.AssignedQuizzes.Add(quiz);
 
-        // Assert
         Assert.False(quiz.AllowRetake);
     }
 
     [Fact]
     public void Quiz_ShouldRandomizeQuestions_WhenRandomizeIsTrue()
     {
-        // Arrange
         var quiz = new Quiz(
             "Sample Quiz",
             "This is a sample quiz.",
-            new List<Question>(), // Add some questions if needed
-            true, // randomizeQuestions set to true
+            new List<Question>(),
+            true,
             true
         );
-
-        // Assert
+        
         Assert.True(quiz.RandomizeQuestions);
     }
 
     [Fact]
     public void Quiz_ShouldNotRandomizeQuestions_WhenRandomizeIsFalse()
     {
-        // Arrange
         var quiz = new Quiz(
             "Sample Quiz",
             "This is a sample quiz.",
-            new List<Question>(), // Add some questions if needed
-            false, // randomizeQuestions set to false
+            new List<Question>(),
+            false,
             true
         );
 
-        // Assert
         Assert.False(quiz.RandomizeQuestions);
     }
 }

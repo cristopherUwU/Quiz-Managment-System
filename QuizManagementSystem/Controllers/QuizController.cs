@@ -106,17 +106,15 @@ namespace QuizManagementSystem.Controllers
             Console.WriteLine("Enter the question (with a blank where the user will fill in):");
             string questionText = Console.ReadLine();
 
-            Console.WriteLine("Enter keywords that should be present in the correct answer (comma separated):");
-            string keywordInput = Console.ReadLine();
-            var keywords = keywordInput.Split(',').Select(k => k.Trim()).ToList();
+            Console.WriteLine("Enter the correct answer:");
+            string correctAnswer = Console.ReadLine();
 
             return new FillInBlankQuestion
             {
                 Description = questionText,
-                Keywords = keywords
+                CorrectAnswer = correctAnswer
             };
         }
-
         
         private Question SelectQuestionFromPool()
         {
@@ -144,8 +142,6 @@ namespace QuizManagementSystem.Controllers
             Console.WriteLine("Invalid selection.");
             return null;
         }
-
-
 
         public void ViewAllQuizzes()
         {
@@ -231,6 +227,7 @@ namespace QuizManagementSystem.Controllers
             return mcQuestion;
         }
 
+
         private TrueFalseQuestion CreateTrueFalseQuestion()
         {
             Console.WriteLine("Enter the question:");
@@ -251,13 +248,14 @@ namespace QuizManagementSystem.Controllers
             Console.WriteLine("Enter the question:");
             string questionText = Console.ReadLine();
 
-            Console.WriteLine("Enter the correct answer:");
-            string correctAnswer = Console.ReadLine();
+            Console.WriteLine("Enter keywords for the correct answer (comma separated):");
+            string keywordInput = Console.ReadLine();
+            var keywords = keywordInput.Split(',').Select(k => k.Trim()).ToList();
 
             return new ShortAnswerQuestion
             {
                 Description = questionText,
-                CorrectAnswer = correctAnswer
+                Keywords = keywords
             };
         }
         
@@ -283,13 +281,25 @@ namespace QuizManagementSystem.Controllers
             }
 
             var selectedQuiz = user.AssignedQuizzes[quizChoice - 1];
-            TakeQuiz(selectedQuiz);
+            TakeQuiz(selectedQuiz, user);
         }
 
-        private void TakeQuiz(Quiz quiz)
+        private void TakeQuiz(Quiz quiz, User user)
         {
+            if (!quiz.AllowRetake && quiz.UserAttempts.ContainsKey(user.Nickname) && quiz.UserAttempts[user.Nickname] > 0)
+            {
+                Console.WriteLine("You cannot retake this quiz.");
+                return;
+            }
+
+            if (!quiz.UserAttempts.ContainsKey(user.Nickname))
+            {
+                quiz.UserAttempts[user.Nickname] = 0;
+            }
+            quiz.UserAttempts[user.Nickname]++;
+
             Console.WriteLine($"Taking quiz: {quiz.Title}");
-    
+
             if (quiz.RandomizeQuestions)
             {
                 quiz.Questions = quiz.Questions.OrderBy(q => Guid.NewGuid()).ToList(); // Shuffle questions
@@ -300,12 +310,30 @@ namespace QuizManagementSystem.Controllers
             foreach (var question in quiz.Questions)
             {
                 Console.WriteLine(question.Description);
+
+                if (question is MultipleChoiceQuestion mcQuestion)
+                {
+                    for (int i = 0; i < mcQuestion.Options.Count; i++)
+                    {
+                        Console.WriteLine($"{i + 1}. {mcQuestion.Options[i]}");
+                    }
+                    Console.WriteLine("Choose the number of your answer:");
+                }
+
                 string userAnswer = Console.ReadLine();
 
-                if (question.CheckAnswer(userAnswer))
+                if (question is MultipleChoiceQuestion multipleChoice)
+                {
+                    if (int.TryParse(userAnswer, out int userChoice) && userChoice - 1 == multipleChoice.CorrectOption)
+                    {
+                        attempt.CorrectAnswers++;
+                    }
+                }
+                else if (question.CheckAnswer(userAnswer))
                 {
                     attempt.CorrectAnswers++;
                 }
+
                 attempt.TotalQuestions++;
             }
 

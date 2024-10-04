@@ -11,6 +11,8 @@ namespace QuizManagementSystem.Models
         public bool RandomizeQuestions { get; set; }
         public List<QuizAttempt> Attempts { get; set; }
         
+        public Dictionary<string, int> UserAttempts { get; set; }
+        
         public Quiz(string title, string description, List<Question> questions, bool allowRetake, bool randomizeQuestions)
         {
             Title = title;
@@ -20,5 +22,6 @@ namespace QuizManagementSystem.Models
             RandomizeQuestions = randomizeQuestions;
             Attempts = new List<QuizAttempt>();
         }
+        
     }
 }
